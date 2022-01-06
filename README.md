@@ -15,3 +15,6 @@ Log and save your workout sessions on different locations surrounding your actua
 2. leaflet.js
 3. Geolocation API
 4. LocalStorage
+
+## My Approach
+This project is a part of jonas schmedtmann's Javascript course. I made the entire working of this app through javascript from scratch. Jonas's has applied OOPs concepts to entire web app, whereas I have made this app using functions majorly and a single class. Open for any improvements and changes that is possible in my approach and code. 
