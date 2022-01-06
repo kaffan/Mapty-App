@@ -12,100 +12,15 @@ const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 const mapClicked = document.querySelector('#map');
-
+const clsBtn = document.querySelector('.closebtn');
 // Common property declarations
 let map;
-let commonList,commonL={};
+let commonList=[],commonL;
 let type, dist, dur, cad, elev;
 let obj;
-// const _ = require('lodash');
+let marker=[];
+let flag=0;
 
-// Rendering the stored object
-// localStorage.clear();
-// console.log(localStorage.getItem('mainObj'));
-// console.log(localStorage.getItem('mainObj'));
-// (localStorage.getItem('mainObj')) ? commonL = JSON.parse(localStorage.getItem('mainObj')) : commonList = new Array();
-// console.log(commonL);
-//  if(Object.keys(commonL).length)
-//  {
-//      for(let i=0;i<Object.keys(commonL).length;i++)
-//      {
-//          commonList.push(commonL[`i${i}`]);
-//      }
-//  }
-commonList = localStorage.getItem("mainObj") ? JSON.parse(localStorage.getItem("mainObj")) : [];
-//    commonList = [...commonL];
-// console.log(typeof commonList);
-if(commonList.length==0)
-{
-    getCurrPosition();
-}
-else
-{
-    commonList.forEach((objt,i)=>
-    {
-        if(i==0)
-        {
-            console.log(objt);
-            pointOnMap(objt.lat, objt.long);
-            DisplayMap(onjt.lat, objt.long);
-        }
-        else
-        {
-            pointOnMap(objt.lat, objt.long);
-            newItem(objt.type, objt.distance, objt.duration, objt.cadence, objt.elev);
-        }
-    });
-}
-// Getting user's location
-
-// console.log(navigator.geolocation);
-function getCurrPosition()
-{
-    if(navigator.geolocation)
-    {
-        const options = 
-        {
-            enableHighAccuracy: true,
-        };
-        navigator.geolocation.getCurrentPosition(function(position,options)
-        {
-           // console.log(position.coords.latitude,position.coords.longitude);
-            pointOnMap(position.coords.latitude,position.coords.longitude);
-        });
-    }
-    else
-    {
-        alert("Geolocation is not supported by your browser");
-    }
-}
-
-
-// Rendering Map on webpage
-function pointOnMap(lat, long)
-{
-    if(!commonList.length)
-      DisplayMap(lat, long);
-    L.marker([lat, long]).addTo(map);
-    if(!commonList.length)
-       commonList.push(new Workout(lat, long));
-    console.log(commonList);
-}
-
-// Display Map
-
-function DisplayMap(lat, long)
-{
-    map = L.map('map').setView([lat, long], 13);
-    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-     maxZoom: 30,
-     id: 'mapbox/streets-v11',
-     tileSize: 512,
-     zoomOffset: -1,
-     accessToken: 'pk.eyJ1IjoiYWZmYW5rIiwiYSI6ImNreHJub2U4MTIxaGEyb2tvbmJrOGVjOGcifQ.EINQ3wBVPUdttUKE9Yqz_Q'
-    }).addTo(map);
-}
 // Workout Class
 class Workout
 {
@@ -116,7 +31,7 @@ class Workout
     #duration;
     #cadence;
     #elev_gain;
-    #date
+    #date;
     constructor(lat, long)
     {
         this.#lat = lat;
@@ -179,6 +94,97 @@ class Workout
         return this.#date;
     }
 }
+// Rendering the stored object
+commonL = localStorage.getItem("mainObj") ? JSON.parse(localStorage.getItem("mainObj")) : [];
+console.log(commonL);
+commonL.forEach((objt,i)=>
+{
+    obj = new Workout(objt.lat, objt.long);
+    obj.dist = objt.dist ? objt.dist : undefined;
+    obj.typ = objt.typ ? objt.typ : undefined;
+    obj.durr = objt.durr ? objt.durr : undefined;
+    obj.cad = objt.cad ? objt.cad : undefined;
+    obj.Elev = objt.elev ? objt.elev : undefined;
+    obj.date = objt.dat ? objt.dat : undefined;
+    commonList.push(obj);
+});
+commonL=[];
+if(commonList.length==0)
+{
+    getCurrPosition();
+}
+else
+{
+    commonList.forEach((objt,i)=>
+    {
+        if(i==0)
+        {
+            console.log(objt);
+            DisplayMap(objt.lat, objt.long);
+            //pointOnMap(objt.lat, objt.long);
+            L.marker([objt.lat, objt.long]).addTo(map).bindPopup(L.popup({autoClose: false,
+                closeOnClick: false,})).setPopupContent('My Current Location').openPopup();
+        }
+        else
+        {
+           // pointOnMap(objt.lat, objt.long);
+            let dat = new Date(objt.date);
+            newItem(objt.type, objt.distance, objt.duration, objt.cadence, objt.elev, dat);
+            L.marker([objt.lat, objt.long]).addTo(map).bindPopup(L.popup({autoClose: false,
+                closeOnClick: false,className: `${type}-popup`})).setPopupContent(`${(objt.type=="Running")? "🏃‍♂️": "🚴‍♀️"} ${objt.type} on ${months[dat.getMonth()]} ${dat.getDate()}`).openPopup();
+
+        }
+    });
+}
+// Getting user's location
+
+function getCurrPosition()
+{
+    if(navigator.geolocation)
+    {
+        const options = 
+        {
+            enableHighAccuracy: true,
+        };
+        navigator.geolocation.getCurrentPosition(function(position,options)
+        {
+           // console.log(position.coords.latitude,position.coords.longitude);
+            pointOnMap(position.coords.latitude,position.coords.longitude);
+        });
+    }
+    else
+    {
+        alert("Geolocation is not supported by your browser");
+    }
+}
+
+
+// Rendering Map on webpage
+
+function pointOnMap(lat, long)
+{
+    DisplayMap(lat, long);
+    L.marker([lat, long]).addTo(map);
+    obj = new Workout(lat, long);
+    commonList.push(obj);
+    console.log(commonList);
+}
+
+// Display Map
+
+function DisplayMap(lat, long)
+{
+    map = L.map('map').setView([lat, long], 13);
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+     maxZoom: 30,
+     id: 'mapbox/streets-v11',
+     tileSize: 512,
+     zoomOffset: -1,
+     accessToken: 'pk.eyJ1IjoiYWZmYW5rIiwiYSI6ImNreHJub2U4MTIxaGEyb2tvbmJrOGVjOGcifQ.EINQ3wBVPUdttUKE9Yqz_Q'
+    }).addTo(map);
+}
+
 // Click Callback function
 
 function CallClick(e)
@@ -187,7 +193,8 @@ function CallClick(e)
     e.preventDefault();
     let coords = map.mouseEventToLatLng(e);
     console.log(coords);
-    L.marker([coords.lat, coords.lng]).addTo(map);
+    marker = L.marker([coords.lat, coords.lng]).addTo(map);
+    // L.marker([coords.lat, coords.long]).addTo(map).bindPopup(L.popup({className: `${type}-popup`})).setPopupContent(`${(objt.type=="Running")? "🏃‍♂️": "🚴‍♀️"} ${objt.type} on ${months[dat.getMonth()]} ${dat.getDate()}`).openPopup();
     // console.log(e.latlng.lat, e.latlng.lng);
     obj = new Workout(coords.lat, coords.lng);
     //console.log(obj);
@@ -196,16 +203,13 @@ function CallClick(e)
     // commonList.push(obj);
 }
 // Setting Location on maps
+
 mapClicked.addEventListener('click',CallClick);
 
 // Creating A New List Item
 function createListItem(obj)
 {
     form.classList.remove('hidden');
-    // while(!(type && dist && dur && (cad || elev)))
-    // {
-    //     type = inputType.options[inputType.selectedIndex].value;
-    // }
 }
 
 // adding event to type input
@@ -233,6 +237,7 @@ inputType.addEventListener('change', function (e) {
 
 function newItem(type, dist, dur, cad, elev, date)
 {
+    console.log(typeof date);
     let newListItem = `
             <h2 class="workout__title">${type} on ${months[date.getMonth()]} ${date.getDate()}</h2>
             <div class="workout__details">
@@ -294,6 +299,7 @@ form.addEventListener('keydown',function(e)
                 obj.Elev = elev;
                 obj.date = date;
                 obj.cad = cad;
+                L.marker([obj.lat, obj.long]).addTo(map).bindPopup(L.popup({className: `${type}-popup`})).setPopupContent(`${(obj.type=="Running")? "🏃‍♂️": "🚴‍♀️"} ${obj.type} on ${months[date.getMonth()]} ${date.getDate()}`).openPopup();
                 newItem(type, dist, dur, cad, elev, date);
                 commonList.push(obj);
                 console.log(commonList);
@@ -316,22 +322,33 @@ function afterItem()
 
 // When closing the document saving object on local storage
 //
-// Problem I encountered: JSON.stringify was deleteing the contents of the objects inside the array
+// solution of problem I was facing: Ya actually I understood the problem
 
-// Reason of problem: Well, the problem is that 
-// you're creating AN ARRAY then continue working with it as with an object.
+// Here I posted on LinkedIn
+// Do check out
 
-// stackoverflow link: https://stackoverflow.com/questions/27955104/json-stringify-removing-data-from-object
-
+// https://www.linkedin.com/posts/affan-khan-6626b9195_programming-javascript-webdeveloper-activity-6884523908486201345-l6tn
 function SaveWhenUnloaded()
 {
     console.log(commonList);
     // commonL = {...commonList};
-    // commonList.forEach((obj,i)=>
-    // {
-    //     console.log(i);
-    //     commonL['i'+i] = {...obj};
-    // });
-    // console.log(commonL);
-    localStorage.setItem("mainObj",JSON.stringify(commonList));
-};
+    commonList.forEach((obj,i)=>
+    {
+        console.log(i);
+        commonL.push({lat: obj.lat, long: obj.long,typ: obj.type, cad: obj.cadence, elev: obj.elev, dist: obj.distance, durr: obj.duration, dat: obj.date});
+    });
+    // console.log(JSON.stringify(commonL));
+    localStorage.clear();
+    localStorage.setItem("mainObj",JSON.stringify(commonL));
+}
+
+clsBtn.addEventListener('click',function(e)
+{
+    setTimeout(()=>
+    {
+        e.preventDefault();
+    localStorage.clear();
+    document.querySelector('body').removeAttribute('onbeforeunload');
+    window.location.reload();
+    },1);
+});
