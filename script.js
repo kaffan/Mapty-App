@@ -348,7 +348,9 @@ clsBtn.addEventListener('click',function(e)
     {
         e.preventDefault();
     localStorage.clear();
-    document.querySelector('body').removeAttribute('onbeforeunload');
+//     document.querySelector('body').removeAttribute('onbeforeunload');
+        //this above line not working in forefox 
+    window.onbeforeunload = null;
     window.location.reload();
     },1);
 });
